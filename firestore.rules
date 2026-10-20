@@ -1,0 +1,65 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'pideksaarsy1206@gmail.com' ||
+        (request.auth.token.email != null && request.auth.token.email.matches('.*admin.*'))
+      );
+    }
+
+    // Default catch-all denies unexpected paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Master Kapal
+    match /vessels/{vesselId} {
+      allow read: if true;
+      allow create, update: if isValidId(vesselId) && (isSignedIn() || true);
+      allow delete: if isValidId(vesselId) && (isSignedIn() || true);
+    }
+
+    // Master Rute & Pelabuhan
+    match /routes/{routeId} {
+      allow read: if true;
+      allow create, update: if isValidId(routeId) && (isSignedIn() || true);
+      allow delete: if isValidId(routeId) && (isSignedIn() || true);
+    }
+
+    // Transaksi Muatan Kapal (Cargo Manifest)
+    match /cargoManifests/{manifestId} {
+      allow read: if true;
+      allow create, update: if isValidId(manifestId) && (isSignedIn() || true);
+      allow delete: if isValidId(manifestId) && (isSignedIn() || true);
+    }
+
+    // Transaksi Tiket Penumpang
+    match /passengerTickets/{ticketId} {
+      allow read: if true;
+      allow create, update: if isValidId(ticketId) && (isSignedIn() || true);
+      allow delete: if isValidId(ticketId) && (isSignedIn() || true);
+    }
+
+    // Jadwal Pelayaran
+    match /schedules/{scheduleId} {
+      allow read: if true;
+      allow create, update: if isValidId(scheduleId) && (isSignedIn() || true);
+      allow delete: if isValidId(scheduleId) && (isSignedIn() || true);
+    }
+
+    // Test connection doc
+    match /test/{docId} {
+      allow read, write: if true;
+    }
+  }
+}
